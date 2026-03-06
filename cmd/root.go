@@ -1,6 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
+	"os"
+
+	"github.com/chippy-ao/redmine-cli/internal/client"
+	"github.com/chippy-ao/redmine-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -17,4 +22,22 @@ func init() {
 
 func Execute() error {
 	return rootCmd.Execute()
+}
+
+func loadClientFromProfile() (*client.Client, error) {
+	cfg, err := config.LoadConfig(config.DefaultConfigPath())
+	if err != nil {
+		return nil, err
+	}
+	p, err := cfg.GetProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	return client.New(p.URL, p.APIKey), nil
+}
+
+func outputJSON(v interface{}) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
 }
