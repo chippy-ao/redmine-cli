@@ -22,6 +22,7 @@ brews:
   - repository:
       owner: chippy-ao
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
     homepage: https://github.com/chippy-ao/redmine-cli
     description: "Redmine CLI - Redmine REST API を操作する CLI ツール"
