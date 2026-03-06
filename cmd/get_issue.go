@@ -37,7 +37,7 @@ func runGetIssue(cmd *cobra.Command, args []string) error {
 		params["include"] = include
 	}
 
-	var result interface{}
+	var result any
 	path := fmt.Sprintf("/issues/%d.json", id)
 	if err := c.Get(path, params, &result); err != nil {
 		return fmt.Errorf("チケット取得エラー: %w", err)

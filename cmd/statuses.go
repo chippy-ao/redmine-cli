@@ -22,7 +22,7 @@ func runStatuses(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var result interface{}
+	var result any
 	if err := c.Get("/issue_statuses.json", nil, &result); err != nil {
 		return fmt.Errorf("ステータス取得エラー: %w", err)
 	}

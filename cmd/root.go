@@ -36,7 +36,7 @@ func loadClientFromProfile() (*client.Client, error) {
 	return client.New(p.URL, p.APIKey), nil
 }
 
-func outputJSON(v interface{}) error {
+func outputJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)

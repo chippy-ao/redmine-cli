@@ -1,12 +1,14 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // Client は Redmine API へのHTTPクライアントです。
@@ -21,12 +23,12 @@ func New(baseURL, apiKey string) *Client {
 	return &Client{
 		baseURL: strings.TrimRight(baseURL, "/"),
 		apiKey:  apiKey,
-		http:    &http.Client{},
+		http:    &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 // Get は指定パスに対してGETリクエストを送信し、結果を result にデコードします。
-func (c *Client) Get(path string, params map[string]string, result interface{}) error {
+func (c *Client) Get(path string, params map[string]string, result any) error {
 	u := c.baseURL + path
 	if len(params) > 0 {
 		v := url.Values{}
@@ -39,7 +41,7 @@ func (c *Client) Get(path string, params map[string]string, result interface{}) 
 }
 
 // GetRawQuery は生のクエリ文字列をそのまま使用してGETリクエストを送信します。
-func (c *Client) GetRawQuery(path string, rawQuery string, result interface{}) error {
+func (c *Client) GetRawQuery(path string, rawQuery string, result any) error {
 	u := c.baseURL + path
 	if rawQuery != "" {
 		u += "?" + rawQuery
@@ -47,8 +49,8 @@ func (c *Client) GetRawQuery(path string, rawQuery string, result interface{}) e
 	return c.doGet(u, result)
 }
 
-func (c *Client) doGet(rawURL string, result interface{}) error {
-	req, err := http.NewRequest(http.MethodGet, rawURL, nil)
+func (c *Client) doGet(rawURL string, result any) error {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, rawURL, nil)
 	if err != nil {
 		return fmt.Errorf("リクエスト作成エラー: %w", err)
 	}

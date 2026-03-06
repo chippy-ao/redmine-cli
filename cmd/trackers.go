@@ -22,7 +22,7 @@ func runTrackers(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var result interface{}
+	var result any
 	if err := c.Get("/trackers.json", nil, &result); err != nil {
 		return fmt.Errorf("トラッカー取得エラー: %w", err)
 	}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/spf13/cobra"
 )
@@ -27,8 +28,8 @@ func runVersions(cmd *cobra.Command, args []string) error {
 
 	project, _ := cmd.Flags().GetString("project")
 
-	var result interface{}
-	path := fmt.Sprintf("/projects/%s/versions.json", project)
+	var result any
+	path := fmt.Sprintf("/projects/%s/versions.json", url.PathEscape(project))
 	if err := c.Get(path, nil, &result); err != nil {
 		return fmt.Errorf("バージョン取得エラー: %w", err)
 	}

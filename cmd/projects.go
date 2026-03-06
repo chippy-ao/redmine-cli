@@ -39,7 +39,7 @@ func runProjects(cmd *cobra.Command, args []string) error {
 	limit, _ := cmd.Flags().GetInt("limit")
 	params["limit"] = fmt.Sprintf("%d", limit)
 
-	var result interface{}
+	var result any
 	if err := c.Get("/projects.json", params, &result); err != nil {
 		return fmt.Errorf("プロジェクト取得エラー: %w", err)
 	}

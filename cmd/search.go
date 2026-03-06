@@ -59,7 +59,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		Limit:          limit,
 	}
 
-	var result interface{}
+	var result any
 
 	if keyword != "" {
 		filterQuery := query.BuildFilterQuery(keyword, sp)
