@@ -5,10 +5,14 @@
 # macOS
 .DS_Store
 
-# Node.js
-node_modules/
-dist/
-*.log
+# Go
+redmine-cli
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vendor/
 
 # Environment
 .env
