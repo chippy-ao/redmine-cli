@@ -60,6 +60,8 @@ Commands:
   statuses     ステータス一覧
   categories   カテゴリ一覧（要 --project）
   versions     バージョン一覧（要 --project）
+  priorities      優先度一覧
+  members         プロジェクトメンバー一覧（要 --project）
   create-issue    チケット作成（要 --project, --subject）
   add-relation    リレーション作成（要 --issue-id, --related-id, --type）
   delete-relation リレーション削除
