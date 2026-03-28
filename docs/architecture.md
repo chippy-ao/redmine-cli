@@ -60,7 +60,9 @@ Commands:
   statuses     ステータス一覧
   categories   カテゴリ一覧（要 --project）
   versions     バージョン一覧（要 --project）
-  create-issue チケット作成（要 --project, --subject）
+  create-issue    チケット作成（要 --project, --subject）
+  add-relation    リレーション作成（要 --issue-id, --related-id, --type）
+  delete-relation リレーション削除
 
 Global Flags:
   --profile    使用するプロファイル名（省略時はデフォルト）
