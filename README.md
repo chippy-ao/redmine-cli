@@ -50,6 +50,23 @@ redmine-cli get-issue 1234
 redmine-cli get-issue 1234 --include journals,children
 ```
 
+### チケット作成
+```bash
+redmine-cli create-issue --project myproject --subject "バグ修正"
+redmine-cli create-issue --project myproject --subject "新機能" --tracker-id 2 --priority-id 1 --description "詳細説明"
+redmine-cli create-issue --project myproject --subject "子タスク" --parent-issue-id 1234
+```
+
+### リレーション操作
+```bash
+# リレーション作成
+redmine-cli add-relation --issue-id 1234 --related-id 5678 --type relates
+redmine-cli add-relation --issue-id 1234 --related-id 5678 --type precedes --delay 3
+
+# リレーション削除
+redmine-cli delete-relation 443
+```
+
 ### 一覧取得
 ```bash
 redmine-cli projects
