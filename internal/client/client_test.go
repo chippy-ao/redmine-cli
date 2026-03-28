@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -179,5 +180,147 @@ func TestGet_OtherErrorReturnsStatusAndBody(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "internal server error") {
 		t.Errorf("expected error to contain body, got %q", err.Error())
+	}
+}
+
+func TestPost_SendsCorrectMethodAndBody(t *testing.T) {
+	var receivedMethod string
+	var receivedBody []byte
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod = r.Method
+		receivedBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{"issue": map[string]any{"id": 123}})
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "test-api-key")
+	body := map[string]any{"issue": map[string]any{"project_id": "test", "subject": "テスト"}}
+	var result map[string]any
+	err := c.Post("/issues.json", body, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if receivedMethod != http.MethodPost {
+		t.Errorf("expected POST method, got %s", receivedMethod)
+	}
+
+	var sentBody map[string]any
+	if err := json.Unmarshal(receivedBody, &sentBody); err != nil {
+		t.Fatalf("failed to parse sent body: %v", err)
+	}
+	issue, ok := sentBody["issue"].(map[string]any)
+	if !ok {
+		t.Fatal("expected issue key in body")
+	}
+	if issue["subject"] != "テスト" {
+		t.Errorf("expected subject テスト, got %v", issue["subject"])
+	}
+}
+
+func TestPost_APIKeyHeader(t *testing.T) {
+	var receivedAPIKey string
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAPIKey = r.Header.Get("X-Redmine-API-Key")
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{})
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "my-secret-key")
+	var result any
+	err := c.Post("/issues.json", map[string]any{}, &result)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if receivedAPIKey != "my-secret-key" {
+		t.Errorf("expected API key my-secret-key, got %s", receivedAPIKey)
+	}
+}
+
+func TestPost_422ReturnsValidationErrors(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(map[string]any{"errors": []string{"Subject cannot be blank", "Project is not valid"}})
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "key")
+	var result any
+	err := c.Post("/issues.json", map[string]any{}, &result)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "Subject cannot be blank") {
+		t.Errorf("expected validation error message, got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "Project is not valid") {
+		t.Errorf("expected second validation error, got %q", err.Error())
+	}
+}
+
+func TestPost_422FallbackOnInvalidJSON(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte("not json"))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "key")
+	var result any
+	err := c.Post("/issues.json", map[string]any{}, &result)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "not json") {
+		t.Errorf("expected raw body in error, got %q", err.Error())
+	}
+}
+
+func TestDelete_SendsDeleteRequest(t *testing.T) {
+	var receivedMethod string
+	var receivedPath string
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod = r.Method
+		receivedPath = r.URL.Path
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "key")
+	err := c.Delete("/relations/1.json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if receivedMethod != http.MethodDelete {
+		t.Errorf("expected DELETE method, got %s", receivedMethod)
+	}
+	if receivedPath != "/relations/1.json" {
+		t.Errorf("expected path /relations/1.json, got %s", receivedPath)
+	}
+}
+
+func TestDelete_404ReturnsError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Not Found"))
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "key")
+	err := c.Delete("/relations/999.json")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "404") {
+		t.Errorf("expected 404 error, got %q", err.Error())
 	}
 }

@@ -60,6 +60,7 @@ Commands:
   statuses     ステータス一覧
   categories   カテゴリ一覧（要 --project）
   versions     バージョン一覧（要 --project）
+  create-issue チケット作成（要 --project, --subject）
 
 Global Flags:
   --profile    使用するプロファイル名（省略時はデフォルト）
@@ -89,6 +90,25 @@ Global Flags:
 |-------|-----|------|
 | (引数) | int | チケットID（必須） |
 | `--include` | string | 追加情報（カンマ区切り）: journals, children, relations, attachments, changesets, watchers, allowed_statuses |
+
+### create-issue フラグ
+
+| フラグ | 型 | 説明 |
+|-------|-----|------|
+| `--project` | string | プロジェクト ID or 識別子（必須） |
+| `--subject` | string | チケット件名（必須） |
+| `--tracker-id` | int | トラッカーID |
+| `--status-id` | int | ステータスID |
+| `--priority-id` | int | 優先度ID |
+| `--description` | string | チケット説明 |
+| `--category-id` | int | カテゴリID |
+| `--version-id` | int | 対象バージョンID |
+| `--assigned-to-id` | int | 担当者ID |
+| `--parent-issue-id` | int | 親チケットID |
+| `--estimated-hours` | float | 予定工数 |
+| `--private` | bool | プライベートチケット |
+
+未指定のオプションフラグはリクエストに含まれない（`cobra.Changed()` で制御）。
 
 ## 認証・設定
 
@@ -140,6 +160,7 @@ redmine-cli config remove <name>
 | 認証エラー (401) | `認証エラー: APIキーが無効です。` | 1 |
 | 権限エラー (403) | `権限エラー: アクセス権がありません。` | 1 |
 | 未検出 (404) | `チケット #xxx が見つかりません。` | 1 |
+| バリデーションエラー (422) | `バリデーションエラー: Subject cannot be blank, ...` | 1 |
 
 ## 前提条件
 
