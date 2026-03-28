@@ -72,8 +72,10 @@ redmine-cli delete-relation 443
 redmine-cli projects
 redmine-cli trackers
 redmine-cli statuses
+redmine-cli priorities
 redmine-cli categories --project myproject
 redmine-cli versions --project myproject
+redmine-cli members --project myproject
 ```
 
 ### 複数環境の切り替え
