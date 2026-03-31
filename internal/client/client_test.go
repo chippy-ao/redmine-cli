@@ -283,6 +283,58 @@ func TestPost_422FallbackOnInvalidJSON(t *testing.T) {
 	}
 }
 
+func TestPut_SendsCorrectMethodAndBody(t *testing.T) {
+	var receivedMethod string
+	var receivedBody []byte
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod = r.Method
+		receivedBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "test-api-key")
+	body := map[string]any{"issue": map[string]any{"status_id": 5, "notes": "更新テスト"}}
+	err := c.Put("/issues/123.json", body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if receivedMethod != http.MethodPut {
+		t.Errorf("expected PUT method, got %s", receivedMethod)
+	}
+
+	var sentBody map[string]any
+	if err := json.Unmarshal(receivedBody, &sentBody); err != nil {
+		t.Fatalf("failed to parse sent body: %v", err)
+	}
+	issue, ok := sentBody["issue"].(map[string]any)
+	if !ok {
+		t.Fatal("expected issue key in body")
+	}
+	if issue["notes"] != "更新テスト" {
+		t.Errorf("expected notes 更新テスト, got %v", issue["notes"])
+	}
+}
+
+func TestPut_422ReturnsValidationErrors(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(map[string]any{"errors": []string{"Status is not valid"}})
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "key")
+	err := c.Put("/issues/123.json", map[string]any{})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "Status is not valid") {
+		t.Errorf("expected validation error message, got %q", err.Error())
+	}
+}
+
 func TestDelete_SendsDeleteRequest(t *testing.T) {
 	var receivedMethod string
 	var receivedPath string
