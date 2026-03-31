@@ -75,6 +75,21 @@ func (c *Client) Post(path string, body any, result any) error {
 	return c.doRequest(req, result)
 }
 
+// Put は指定パスに対してPUTリクエストを送信します。
+func (c *Client) Put(path string, body any) error {
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("リクエストボディのJSON変換エラー: %w", err)
+	}
+
+	u := c.baseURL + path
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, u, bytes.NewReader(jsonBody))
+	if err != nil {
+		return fmt.Errorf("リクエスト作成エラー: %w", err)
+	}
+	return c.doRequest(req, nil)
+}
+
 // Delete は指定パスに対してDELETEリクエストを送信します。
 func (c *Client) Delete(path string) error {
 	u := c.baseURL + path
